@@ -1,4 +1,6 @@
 #include "Image.h"
+
+csc::Mutex mutex;
 /*
  *
  * */
@@ -10,12 +12,14 @@ Image::~Image(){}
  *
  *@param 
  * */
-void Image::addImage(Request * request)
+void Image::addImage(Request request)
 {
-  this->iq.paths.push(*request);
+  synchronized(mutex){
+    this->targetRequests.push_back(request);
+  }
 }
 
-Mat readLocalImage(){
+//Mat readLocalImage(){
   
-}
+//}
 
