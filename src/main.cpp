@@ -1,6 +1,6 @@
 #include "Scanner.h"
 
-static string path = "../../../Image/160608/laser_off/1.jpeg";
+static string PATH = "../../../Image/160608/laser_off/1.jpeg";
 
 class ImageProcessor : public PointProcessor
 {
@@ -16,8 +16,6 @@ void ImageProcessor::process(Image & image)
 int main(int argc, char **argv)
 {
   Scanner scanner;
- // Processor process = new ImageProcessor();
-  scanner.create(new ImageProcessor()).run();
-//  scanner.create().run();
+  scanner.create(new ImageProcessor()).addPath(PATH).thread(5).run();
   return 0;
 }

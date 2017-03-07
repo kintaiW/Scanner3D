@@ -1,25 +1,21 @@
 #ifndef _SCHEDULER_H
 #define _SCHEDULER_H
 
-//#include <vector>
 #include <queue>
+
 #include "Request.h"
+#include "KKLock.h"
 
 using namespace std;
-
-struct QueueRequest
-{
-  queue<Request> paths;
-};
 
 class Scheduler
 {
 
 public:
   void push(Request * request);
-  inline QueueRequest getRequests(){return this->m;}
+  Request * poll();
   
 private:
-  QueueRequest m;
+  queue<Request> queueScheduler;
 };
 #endif

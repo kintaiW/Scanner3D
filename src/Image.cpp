@@ -1,6 +1,6 @@
 #include "Image.h"
 
-csc::Mutex mutex;
+csc::Mutex i_mutex;
 /*
  *
  * */
@@ -14,7 +14,7 @@ Image::~Image(){}
  * */
 void Image::addImage(Request request)
 {
-  synchronized(mutex){
+  synchronized(i_mutex){
     this->targetRequests.push_back(request);
   }
 }
