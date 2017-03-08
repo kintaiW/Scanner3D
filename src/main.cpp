@@ -10,7 +10,8 @@ public:
 
 void ImageProcessor::process(Image & image)
 {
-  printf("using process !\n");
+  
+  printf("using process %s\n",&image);
 }
 
 int main(int argc, char **argv)

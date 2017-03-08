@@ -5,6 +5,8 @@ pthread_cond_t Scanner::command_cond_ = PTHREAD_COND_INITIALIZER;
 bool Scanner::shutdown_ = false;
 int Scanner::icurr_thread_num_ = THREAD_NUM;
 map<pthread_t,int> Scanner::thread_id_map_;
+struct timeval Scanner::now;
+struct timespec Scanner::outtime;
 Processor processor;
 
 Scheduler scheduler;
@@ -29,8 +31,10 @@ Scanner Scanner::create(Processor p)
 void * Scanner::process(void * arg)
 {
   pthread_detach(pthread_self());
-  Image image;
-  processor->process(image);
+  Image * image = (Image*)arg;
+//  Image * image;
+  processor->process(*image);
+  pthread_exit(NULL);
 }
 /*
  *add image to scanner
@@ -51,7 +55,7 @@ Scanner Scanner::addPath(initializer_list<string> lst)
   return *this;
 }
 /*
- *add path to scheduler 
+ *add path to scheduler
  *
  *@param request
  * */
@@ -65,38 +69,38 @@ void Scanner::addRequest(Request * request)
  * */
 void Scanner::run()
 {
-  //initializeThreads();
+  //start to get image and process
   while ( !shutdown_ && 1) {
     pthread_mutex_lock(&command_mutex_);
-
-//    if ( 1 == thread_id_map_[pthread_self()]){
-//      pthread_mutex_unlock(&command_mutex_);
-//      printf
-//    }
-    Request * request = scheduler.poll();
-
-
-    if (request == NULL) {
+    //find the dead thread and remove it from thread_id_map_
+    if ( !thread_id_map_.empty() ) {
+      deleteThread();
       pthread_mutex_unlock(&command_mutex_);
-      pthread_cond_wait(&command_cond_,&command_mutex_);
+    }
+    //check thread number is special *must be short == >long,could not be long ==> short*
+    //control the total of alive thread
+    if ( thread_id_map_.size() == this->threadNum) {
+      checkThread();
+      continue;
+    }
+    //get next image from scheduler
+    Request * request = scheduler.poll();
+    //if need to shutdown thread pool
+//    if (shutdown_) {
+//      pthread_mutex_unlock(&command_mutex_);
+//      printf("thread %u will exit\n", pthread_self());
+//      pthread_exit(NULL);
+//    }
+    //if not image coming ,waitTime $arg second
+    //coming will start a thrad to deal with it
+    if (request == NULL) {
+      waitTime(1);
+      pthread_mutex_unlock(&command_mutex_);
     } else {
       Request requestFinal = *request;
       pthread_mutex_unlock(&command_mutex_);
-
       startThread(&requestFinal);
-//      processRequest(&requestFinal);
     }
-    //if need to shutdown thread pool
-    if (shutdown_) {
-      pthread_mutex_unlock(&command_mutex_);
-      printf("thread %u will exit\n", pthread_self());
-      pthread_exit(NULL);
-    }
-    //check thread number is special
-    if ( threadNum == thread_id_map_.size()) {
-      pthread_cond_wait(&command_cond_,&command_mutex_);
-    }
-
   }
 }
 /*
@@ -147,8 +151,27 @@ void Scanner::addThread()
 
 void Scanner::deleteThread()
 {
-  int size = icurr_thread_num_ - THREAD_NUM;
-  map<pthread_t,int>::iterator iter = thread_id_map_.begin();
-  for(int i=0; i<size; ++i, ++iter)
-    iter->second = 1;
+//  int size = icurr_thread_num_ - THREAD_NUM;
+//  map<pthread_t,int>::iterator iter = thread_id_map_.begin();
+//  for(int i; i<size; ++i, ++iter)
+  for(map<pthread_t,int>::iterator iter = thread_id_map_.begin(); iter!=thread_id_map_.end();iter++)
+    if( iter->second == 1)
+      thread_id_map_.erase(iter);
+}
+
+void Scanner::waitTime(int val)
+{
+  gettimeofday(&now, NULL);
+  outtime.tv_sec = now.tv_sec + val;
+  outtime.tv_nsec = now.tv_usec * 1000;
+  pthread_cond_timedwait(&command_cond_, &command_mutex_, &outtime);
+}
+
+void Scanner::checkThread()
+{
+  for(map<pthread_t,int>::iterator iter = thread_id_map_.begin(); iter!=thread_id_map_.end();iter++){
+    int kill_rc = pthread_kill(iter->first,0);
+    if( kill_rc == ESRCH )
+      iter->second = 1;
+  }
 }

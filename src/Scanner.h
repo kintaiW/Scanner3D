@@ -5,6 +5,8 @@
 #include <string>
 #include <map>
 #include <pthread.h>
+#include <signal.h>
+#include <sys/time.h>
 
 #include "Image.h"
 #include "Request.h"
@@ -41,6 +43,8 @@ public:
   void run();
   void * loop();
   void processRequest(Request * request);
+  void waitTime(int time);
+  void checkThread();
   Scanner thread(int threadNum);
 private:
   Processor p;
@@ -48,6 +52,8 @@ private:
   //thread pool function
   pthread_attr_t attr;
   
+  static struct timeval now;
+  static struct timespec outtime;
   static void startThread(Request * request);
   static void initializeThreads();
   static void * process(void * arg);

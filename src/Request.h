@@ -13,6 +13,7 @@ public:
 
   Request(string file);
   inline string getPath(){return this->file;}
+  string request2String(Request * request);
 private:
   string file;
 };
