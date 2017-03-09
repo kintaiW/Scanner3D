@@ -3,15 +3,21 @@
 csc::Mutex s_mutex;
 queue<Request> queueScheduler;
 
-void Scheduler::push(Request * request)
+void Scheduler::push(Request & request)
 {
-  queueScheduler.push(*request); 
+  queueScheduler.push(request); 
 }
 
-Request* Scheduler::poll()
+Request& Scheduler::poll()
 {
-  if(queueScheduler.size() == 0) return (Request*)NULL;
-  Request request = queueScheduler.front();
+  Request * request = new Request(queueScheduler.front().file.c_str());
+//  Request request(queueScheduler.front().file.c_str());
   queueScheduler.pop(); 
-  return &request;
+  return *request;
+}
+
+void Scheduler::poll(Request & request)
+{
+  request = queueScheduler.front();
+  queueScheduler.pop();
 }

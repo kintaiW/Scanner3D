@@ -12,9 +12,14 @@ class Scheduler
 {
 
 public:
-  void push(Request * request);
-  Request * poll();
-  
+  void push(Request & request);
+  void poll(Request & request);
+  Request & poll();
+#if 1 
+  inline bool hasTask(){ return !queueScheduler.empty();}
+#else
+  inline bool hasTask(){ return queueScheduler.size()==0? false:true;}
+#endif
 private:
   queue<Request> queueScheduler;
 };

@@ -27,6 +27,7 @@ public:
   ~Image();
 
   void addImage(Request request);
+
 private:
 //  ImageQueue iq;
   vector<Request> targetRequests;

@@ -48,13 +48,13 @@ public:
   Scanner thread(int threadNum);
 private:
   Processor p;
-  void addRequest(Request * request);
+  void addRequest(Request & request);
   //thread pool function
   pthread_attr_t attr;
   
   static struct timeval now;
   static struct timespec outtime;
-  static void startThread(Request * request);
+  static void startThread(Request & request);
   static void initializeThreads();
   static void * process(void * arg);
   static void addThread();
