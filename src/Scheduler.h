@@ -20,6 +20,7 @@ public:
 #else
   inline bool hasTask(){ return queueScheduler.size()==0? false:true;}
 #endif
+  inline int getSize(){return queueScheduler.size();}
 private:
   queue<Request> queueScheduler;
 };

@@ -11,7 +11,6 @@ void Scheduler::push(Request & request)
 Request& Scheduler::poll()
 {
   Request * request = new Request(queueScheduler.front().file.c_str());
-//  Request request(queueScheduler.front().file.c_str());
   queueScheduler.pop(); 
   return *request;
 }

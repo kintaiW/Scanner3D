@@ -9,11 +9,11 @@ class Request
 {
 public:
   Request();
+  Request(string file);
   ~Request();
 
   string file;
   bool isValid = false; 
-  Request(string file);
   inline string getPath(){return this->file;}
   string request2String(Request * request);
 private:

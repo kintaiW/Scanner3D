@@ -26,12 +26,23 @@ public:
   Image();
   ~Image();
 
+  Image(string & filename);
   void addImage(Request request);
+  void addImage(int number);
+  void addImage(string folder,int number);
+  Mat image_new(string& filename);
+  void show();
+  inline const char * getName(){return this->filename.c_str();}
+  inline vector<Request> getTargetRequests(){return this->targetRequests;}
+  inline Request getTargetRequest(){return this->targetRequest;}
+  inline int getSize(){return this->mat.rows;}
 
 private:
 //  ImageQueue iq;
   vector<Request> targetRequests;
+  Request targetRequest;
   Request request;
+  string filename;
   Mat mat;
 //  csc::Mutex i_mutex;
   //vector<Request> startRequests = new vector<Request>();

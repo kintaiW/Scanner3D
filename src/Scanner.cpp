@@ -8,8 +8,8 @@ map<pthread_t,int> Scanner::thread_id_map_;
 struct timeval Scanner::now;
 struct timespec Scanner::outtime;
 Processor processor;
-
 Scheduler scheduler;
+
 /*
  *
  * */
@@ -31,11 +31,17 @@ Scanner Scanner::create(Processor p)
 void * Scanner::process(void * arg)
 {
   pthread_detach(pthread_self());
-  string * path = (string *)arg;
-  printf("process %s\n",path->c_str());
-  Image * image = (Image*)arg;
-//  Image * image;
-  processor->process(*image);
+  printf("pid: %d\n",(unsigned int)pthread_self());
+#if 0
+  Image image(*(string *)arg);
+#else
+  printf("process %s\n",(*(((Task *)arg)->path)).c_str());
+  Image image(*(((Task *)arg)->path));
+#endif
+//  ((Scanner*)(((Task *)arg)->obj))->waitTime(1);
+  processor->process(image);
+  ((Scanner*)(((Task *)arg)->obj))->extractAndAddRequest(image);
+ // extractAndAddRequest(image);
   pthread_exit(NULL);
 }
 /*
@@ -74,30 +80,40 @@ void Scanner::run()
 {
   //start to get image and process
   while ( !shutdown_ && 1) {
+   // printf("thread num %d\n",thread_id_map_.size());
+//    waitTime(2);
     pthread_mutex_lock(&command_mutex_);
     //find the dead thread and remove it from thread_id_map_
-    if ( !thread_id_map_.empty() ) {
-      deleteThread();
-      pthread_mutex_unlock(&command_mutex_);
-    }
+//    if ( !thread_id_map_.empty() ) {
+//      deleteThread();
+//      pthread_mutex_unlock(&command_mutex_);
+//    }
     //check thread number is special *must be short == >long,could not be long ==> short*
     //control the total of alive thread
+#if 0
     if ( thread_id_map_.size() == this->threadNum) {
       checkThread();
+      deleteThread();
+      pthread_mutex_unlock(&command_mutex_);
       continue;
     }
+#endif
     //waiting,until a new task coming,startThread at now
     if ( scheduler.hasTask() ) {
       Request requestFinal;
       scheduler.poll(requestFinal);
-      printf("run %s\n",requestFinal.file.c_str());
+#if 0
       startThread(requestFinal);
+#else
+//      printf("run: %s\n",requestFinal.file.c_str());
+      task = Task {path:&(requestFinal.file),obj:(void*)this};
       pthread_mutex_unlock(&command_mutex_);
+      startThread(task);
+#endif
     } else {
-      printf("no task coming\n");
+//      printf("no task coming\n");
       waitTime(1);
       pthread_mutex_unlock(&command_mutex_);
-      continue;
     }
   }
 }
@@ -128,9 +144,18 @@ Scanner Scanner::thread(int threadNum)
 void Scanner::startThread(Request & request)
 {
   string * path = &(request.file);
-  printf("start: %s\n",path->c_str());
   pthread_t tempThread;
   pthread_create(&tempThread, NULL, Scanner::process, path);
+  thread_id_map_[tempThread] = 0;
+}
+
+void Scanner::startThread(Task & task)
+{
+//  printf("startThread %s\n",(*(task.path)).c_str());
+//  printf("startThread %p\n",task.obj);
+//  string * path = &(request.file);
+  pthread_t tempThread;
+  pthread_create(&tempThread, NULL, Scanner::process, &task);
   thread_id_map_[tempThread] = 0;
 }
 
@@ -146,7 +171,7 @@ void Scanner::initializeThreads()
 
 void Scanner::addThread()
 {
-  if(1 );
+  if(1);
 }
 
 void Scanner::deleteThread()
@@ -170,5 +195,14 @@ void Scanner::checkThread()
     int kill_rc = pthread_kill(iter->first,0);
     if( kill_rc == ESRCH )
       iter->second = 1;
+  }
+}
+
+void Scanner::extractAndAddRequest(Image & image)
+{
+  Request request = image.getTargetRequest();
+  printf("extract %s\n",request.file.c_str());
+  if (request.isValid) {
+    addRequest(request);
   }
 }

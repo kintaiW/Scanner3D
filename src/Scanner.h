@@ -18,19 +18,23 @@ using namespace std;
 typedef PointProcessor * Processor;
 #define THREAD_NUM 5
 
+struct Task
+{
+  string * path;
+  void * obj;//a point of Scanner object;
+};
+
 class Scanner
 {
 protected:
-  Image image;
   Scheduler scheduler;
+  Task task;
 
   int threadNum = 1;
   static pthread_mutex_t command_mutex_;
   static pthread_cond_t command_cond_;
 public:
   Scanner();
-//  Scanner(Processor p);
-//  ~Scanner();
 
   Scanner test1();
   //Scanner test2();
@@ -45,6 +49,7 @@ public:
   void processRequest(Request * request);
   void waitTime(int time);
   void checkThread();
+  void extractAndAddRequest(Image &image);
   Scanner thread(int threadNum);
 private:
   Processor p;
@@ -55,6 +60,7 @@ private:
   static struct timeval now;
   static struct timespec outtime;
   static void startThread(Request & request);
+  static void startThread(Task & task);
   static void initializeThreads();
   static void * process(void * arg);
   static void addThread();
