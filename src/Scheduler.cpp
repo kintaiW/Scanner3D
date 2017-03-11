@@ -1,11 +1,10 @@
 #include "Scheduler.h"
 
-csc::Mutex s_mutex;
 queue<Request> queueScheduler;
 
 void Scheduler::push(Request & request)
 {
-  queueScheduler.push(request); 
+    queueScheduler.push(request); 
 }
 
 Request& Scheduler::poll()
@@ -17,6 +16,7 @@ Request& Scheduler::poll()
 
 void Scheduler::poll(Request & request)
 {
-  request = queueScheduler.front();
-  queueScheduler.pop();
+    count += 1;
+    request = queueScheduler.front();
+    queueScheduler.pop();
 }

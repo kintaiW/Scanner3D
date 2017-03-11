@@ -27,6 +27,7 @@ public:
   ~Image();
 
   Image(string & filename);
+  Image( Request & filename);
   void addImage(Request request);
   void addImage(int number);
   void addImage(string folder,int number);
@@ -35,17 +36,12 @@ public:
   inline const char * getName(){return this->filename.c_str();}
   inline vector<Request> getTargetRequests(){return this->targetRequests;}
   inline Request getTargetRequest(){return this->targetRequest;}
-  inline int getSize(){return this->mat.rows;}
-
 private:
-//  ImageQueue iq;
   vector<Request> targetRequests;
   Request targetRequest;
   Request request;
   string filename;
   Mat mat;
-//  csc::Mutex i_mutex;
-  //vector<Request> startRequests = new vector<Request>();
 };
 
 #endif

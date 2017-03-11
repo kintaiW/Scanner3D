@@ -15,13 +15,6 @@ Scheduler scheduler;
  * */
 Scanner::Scanner(){}
 
-Scanner Scanner::test1(){printf("test1 success!");return *this;}
-
-Scanner Scanner::create(void(*func)(Image & image))
-{
-  return *this;
-}
-
 Scanner Scanner::create(Processor p)
 {
   processor = p;
@@ -30,19 +23,31 @@ Scanner Scanner::create(Processor p)
 
 void * Scanner::process(void * arg)
 {
-  pthread_detach(pthread_self());
-  printf("pid: %d\n",(unsigned int)pthread_self());
-#if 0
-  Image image(*(string *)arg);
-#else
-  printf("process %s\n",(*(((Task *)arg)->path)).c_str());
-  Image image(*(((Task *)arg)->path));
-#endif
-//  ((Scanner*)(((Task *)arg)->obj))->waitTime(1);
-  processor->process(image);
-  ((Scanner*)(((Task *)arg)->obj))->extractAndAddRequest(image);
- // extractAndAddRequest(image);
-  pthread_exit(NULL);
+  printf("pid %lu created, arg %p\n",pthread_self(),arg);
+  while (true)
+  {
+    pthread_mutex_lock(&command_mutex_);
+    while ( !((Scanner *)arg)->scheduler.hasTask() && !shutdown_)
+    {
+      pthread_cond_wait(&command_cond_, &command_mutex_);
+    }
+
+    if(shutdown_)
+    {
+      pthread_mutex_unlock(&command_mutex_);
+      printf("thread %lu will exit\n",pthread_self());
+      pthread_exit(NULL);
+    }
+
+    Request request;
+    ((Scanner*)arg)->pollRequest(request);
+    pthread_mutex_unlock(&command_mutex_);
+
+    Image image(request);
+    processor->process(image);
+    ((Scanner*)arg)->extractAndAddRequest(image);
+    printf("pid %lu run %s\n",pthread_self(),image.getName());
+  }
 }
 /*
  *add image to scanner
@@ -56,13 +61,6 @@ Scanner Scanner::addPath(string path)
   addRequest(request);
   return *this;
 }
-
-//Scanner Scanner::addPath(initializer_list<string> lst)
-//{
-//  for(auto beg=lst.begin(); beg!=lst.end(); ++beg)
-//    addRequest(new Request(*beg));
-//  return *this;
-//}
 /*
  *add path to scheduler
  *
@@ -71,6 +69,15 @@ Scanner Scanner::addPath(string path)
 void Scanner::addRequest(Request & request)
 {
   scheduler.push(request);
+  pthread_cond_signal(&command_cond_);
+}
+
+int Scanner::pollRequest(Request & request)
+{
+  scheduler.poll(request);
+  if( request.isValid )
+  return 0;
+  return -1;
 }
 /*
  *
@@ -78,54 +85,32 @@ void Scanner::addRequest(Request & request)
  * */
 void Scanner::run()
 {
-  //start to get image and process
-  while ( !shutdown_ && 1) {
-   // printf("thread num %d\n",thread_id_map_.size());
-//    waitTime(2);
-    pthread_mutex_lock(&command_mutex_);
-    //find the dead thread and remove it from thread_id_map_
-//    if ( !thread_id_map_.empty() ) {
-//      deleteThread();
-//      pthread_mutex_unlock(&command_mutex_);
-//    }
-    //check thread number is special *must be short == >long,could not be long ==> short*
-    //control the total of alive thread
-#if 0
-    if ( thread_id_map_.size() == this->threadNum) {
-      checkThread();
-      deleteThread();
-      pthread_mutex_unlock(&command_mutex_);
-      continue;
-    }
-#endif
-    //waiting,until a new task coming,startThread at now
-    if ( scheduler.hasTask() ) {
-      Request requestFinal;
-      scheduler.poll(requestFinal);
-#if 0
-      startThread(requestFinal);
-#else
-//      printf("run: %s\n",requestFinal.file.c_str());
-      task = Task {path:&(requestFinal.file),obj:(void*)this};
-      pthread_mutex_unlock(&command_mutex_);
-      startThread(task);
-#endif
-    } else {
-//      printf("no task coming\n");
-      waitTime(1);
-      pthread_mutex_unlock(&command_mutex_);
+  initializeThreads(*this);
+  while (true)
+  {
+    if( this->scheduler.count == tasks)
+    {
+      if ( this->stopAll() == -1)
+      {
+        printf("NOW exit\n");
+        exit(0);
+      }
     }
   }
 }
-/*
- *
- *
- * */
-void Scanner::processRequest(Request * request)
+
+int Scanner::stopAll()
 {
-  printf("start to deal with image!\n");
-  Image image;
-  processor->process(image);
+  if(shutdown_) return -1;
+  printf("end all threads\n");
+  shutdown_ = true;
+  pthread_cond_broadcast(&command_cond_);
+
+  for(map<pthread_t,int>::iterator iter = thread_id_map_.begin(); iter!=thread_id_map_.end();iter++)
+    pthread_join(iter->first,NULL);
+
+  pthread_mutex_destroy(&command_mutex_);
+  pthread_cond_destroy(&command_cond_);
 }
 /*start with more than one threads
  *
@@ -141,44 +126,14 @@ Scanner Scanner::thread(int threadNum)
   return *this;
 }
 
-void Scanner::startThread(Request & request)
+void Scanner::initializeThreads(Scanner & scanner)
 {
-  string * path = &(request.file);
-  pthread_t tempThread;
-  pthread_create(&tempThread, NULL, Scanner::process, path);
-  thread_id_map_[tempThread] = 0;
-}
-
-void Scanner::startThread(Task & task)
-{
-//  printf("startThread %s\n",(*(task.path)).c_str());
-//  printf("startThread %p\n",task.obj);
-//  string * path = &(request.file);
-  pthread_t tempThread;
-  pthread_create(&tempThread, NULL, Scanner::process, &task);
-  thread_id_map_[tempThread] = 0;
-}
-
-void Scanner::initializeThreads()
-{
-  for (int i=0; i< THREAD_NUM; i++)
+  for (int i=0; i<scanner.threadNum; i++)
   {
     pthread_t tempThread;
-    pthread_create(&tempThread, NULL, Scanner::process, NULL);
+    pthread_create(&tempThread, NULL, Scanner::process, (void*)&scanner);
     thread_id_map_[tempThread] = 0;
   }
-}
-
-void Scanner::addThread()
-{
-  if(1);
-}
-
-void Scanner::deleteThread()
-{
-  for(map<pthread_t,int>::iterator iter = thread_id_map_.begin(); iter!=thread_id_map_.end();iter++)
-    if( iter->second == 1)
-      thread_id_map_.erase(iter);
 }
 
 void Scanner::waitTime(int val)
@@ -187,21 +142,12 @@ void Scanner::waitTime(int val)
   outtime.tv_sec = now.tv_sec + val;
   outtime.tv_nsec = now.tv_usec * 1000;
   pthread_cond_timedwait(&command_cond_, &command_mutex_, &outtime);
-}
-
-void Scanner::checkThread()
-{
-  for(map<pthread_t,int>::iterator iter = thread_id_map_.begin(); iter!=thread_id_map_.end();iter++){
-    int kill_rc = pthread_kill(iter->first,0);
-    if( kill_rc == ESRCH )
-      iter->second = 1;
-  }
+  pthread_cond_signal(&command_cond_);
 }
 
 void Scanner::extractAndAddRequest(Image & image)
 {
   Request request = image.getTargetRequest();
-  printf("extract %s\n",request.file.c_str());
   if (request.isValid) {
     addRequest(request);
   }
