@@ -36,6 +36,10 @@ public:
   inline const char * getName(){return this->filename.c_str();}
   inline vector<Request> getTargetRequests(){return this->targetRequests;}
   inline Request getTargetRequest(){return this->targetRequest;}
+  //opencv
+  Mat getROI();
+  Image captureLaser();
+  int centerOfMass();
 private:
   vector<Request> targetRequests;
   Request targetRequest;
@@ -43,5 +47,5 @@ private:
   string filename;
   Mat mat;
 };
-
+bool compareContourAreas(vector<Point> contour1, vector<Point> contour2);
 #endif
