@@ -1,6 +1,7 @@
 ##桌面式三维扫描
 ---
 >用于三维建模学习,机器视觉.
+![meshlab查看](https://github.com/kintaiW/Scanner3D/raw/master/res/result.png)
 
 ###1. 环境
 ####1.1 软件环境
@@ -20,6 +21,7 @@
 在src文件夹下
 * __$__:make
 * __model.ply__: 运行后生成的ply格式模型
+![meshlab查看](https://github.com/kintaiW/Scanner3D/raw/master/res/out.png)
 
 ###3. 原理
 * __[原理图](http://blog.sina.com.cn/s/blog_662c78590100zqwd.html)__
