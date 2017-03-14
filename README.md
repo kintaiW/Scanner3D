@@ -1,7 +1,7 @@
 ##桌面式三维扫描
 ---
 >用于三维建模学习,机器视觉.
-![meshlab查看](https://github.com/kintaiW/Scanner3D/raw/master/res/result.png)
+![meshlab查看](https://github.com/kintaiW/Scanner3D/raw/master/res/meshlab.png)
 
 ###1. 环境
 ####1.1 软件环境
