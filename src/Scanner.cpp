@@ -45,7 +45,7 @@ void * Scanner::process(void * arg)
 
     Image image(request);
     processor->process(image);
-    ((Scanner*)arg)->extractAndAddRequest(image);
+//    ((Scanner*)arg)->extractAndAddRequest(image);
     printf("pid %lu run %s\n",pthread_self(),image.getName());
   }
 }
@@ -71,13 +71,26 @@ void Scanner::addRequest(Request & request)
   scheduler.push(request);
   pthread_cond_signal(&command_cond_);
 }
+/*
+ *add local image path
+ *
+ * @param local image folder path
+ * */
+Scanner Scanner::addLocalPath(string path)
+{
+  for(int i = 1; i<=(360/angle); i++){
+    string basePath = path;
+    string file(basePath.append( (to_string(i)).c_str() ) + ".jpeg");
+    Request request(file,i);
+    addRequest(request);
+  }
+  return *this;
+}
 
 int Scanner::pollRequest(Request & request)
 {
-  scheduler.poll(request);
-  if( request.isValid )
-  return 0;
-  return -1;
+  count+=1;
+  return scheduler.poll(request);
 }
 /*
  *
@@ -88,27 +101,30 @@ void Scanner::run()
   initializeThreads(*this);
   while (true)
   {
-    if( this->scheduler.count == tasks)
+    if( count == tasks)
     {
-      if ( this->stopAll() == -1)
+      if ( this->stopAll(*this) == -1)
       {
         printf("NOW exit\n");
-        exit(0);
+        break;
+//        exit(0);
       }
     }
   }
 }
 
-int Scanner::stopAll()
+int Scanner::stopAll(Scanner & scanner)
 {
   if(shutdown_) return -1;
   printf("end all threads\n");
   shutdown_ = true;
   pthread_cond_broadcast(&command_cond_);
 
-  for(map<pthread_t,int>::iterator iter = thread_id_map_.begin(); iter!=thread_id_map_.end();iter++)
-    pthread_join(iter->first,NULL);
+  for(int i=0; i<scanner.threadNum; i++)
+    pthread_join(pthread_id[i],NULL);
 
+  free(pthread_id);
+  pthread_id = NULL;
   pthread_mutex_destroy(&command_mutex_);
   pthread_cond_destroy(&command_cond_);
 }
@@ -128,11 +144,10 @@ Scanner Scanner::thread(int threadNum)
 
 void Scanner::initializeThreads(Scanner & scanner)
 {
+  pthread_id = (pthread_t*)malloc(sizeof(pthread_t) * scanner.threadNum);
   for (int i=0; i<scanner.threadNum; i++)
   {
-    pthread_t tempThread;
-    pthread_create(&tempThread, NULL, Scanner::process, (void*)&scanner);
-    thread_id_map_[tempThread] = 0;
+    pthread_create(&pthread_id[i], NULL, Scanner::process, (void*)&scanner);
   }
 }
 

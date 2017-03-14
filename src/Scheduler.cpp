@@ -14,9 +14,10 @@ Request& Scheduler::poll()
   return *request;
 }
 
-void Scheduler::poll(Request & request)
+int Scheduler::poll(Request & request)
 {
-    count += 1;
+    if(queueScheduler.empty()) return -1;
     request = queueScheduler.front();
     queueScheduler.pop();
+    return 0;
 }
