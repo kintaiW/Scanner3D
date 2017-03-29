@@ -72,11 +72,14 @@ Mat Image::getROI()
   findContours( img_gray, contours, hierarchy, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_SIMPLE);
 
   Mat dst = Mat::zeros(img_gray.size(), CV_8UC3);
-  //  sort(contours.begin(), contours.end(),
-  //      [](const vector<Point>& c1,const vector<Point>& c2,){
-  //      return contourArea(c1, false) > contourArea(c2, false);
-  //      });
+#if 1  
+    sort(contours.begin(), contours.end(),
+        [](const vector<Point>& c1,const vector<Point>& c2){
+        return contourArea(c1, false) > contourArea(c2, false);
+        });
+#else
   sort(contours.begin(), contours.end(), compareContourAreas);
+#endif
   //  Scalar color(rand()&255, rand()&255, rand()&255);
   Scalar color(255, 255, 255);
   drawContours(dst, contours, 0, color, CV_FILLED, 8, hierarchy);

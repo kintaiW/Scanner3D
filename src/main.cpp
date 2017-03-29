@@ -30,6 +30,19 @@ string getPlyHeader(int num)
   return PLY_HEAD;
 }
 
+static long basesec = 0;
+long getTimeMs(){
+  struct timeval tv;
+  long nowtime;
+  gettimeofday(&tv, 0);
+  if( basesec == 0){
+    basesec = tv.tv_sec;
+  }
+  nowtime = (int64_t)(tv.tv_sec - basesec) * (int64_t)1000 +
+    (int64_t)tv.tv_usec/1E3;
+  return nowtime;
+}
+
 class ImageProcessor : public PointProcessor
 {
 public:
@@ -69,16 +82,20 @@ void ImageProcessor::getModel()
 
 void ImageProcessor::process(Image & image)
 {
+  long time_start=getTimeMs();
   image.captureLaser();
   image.addColor(colors);
   image.generatePointCloud(camera_param, model);
+  printf("\ntook: %lld ", getTimeMs()-time_start);
 }
 
 int main(int argc, char **argv)
 {
+  long time_start=getTimeMs();
   Scanner scanner;
   ImageProcessor * ip = new ImageProcessor();
-  scanner.create(ip).addLocalPath(FOLDER_PATH).thread(5).run();
+  scanner.create(ip).addLocalPath(FOLDER_PATH).thread(16).run();
   ip->getModel();
+  printf("\ntotal took: %lld\n", getTimeMs()-time_start);
   return 0;
 }
