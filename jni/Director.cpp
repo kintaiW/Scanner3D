@@ -9,22 +9,23 @@
 
 Director *
 Director::getInstance() {
-    static Director s_instance;
+    static Director s_instance;//static local variable ,one of single pattern method implement
     return &s_instance;
 }
 
 Director::Director():
-SHUTDOWN(false){}
+SHUTDOWN(false),
+_processImg(nullptr){}
 
 Director::~Director() {
-    delete _processImg;
+//    delete _processImg;//-------------?
 }
-
+//add task to scheduler
 int
 Director::addTask(int num) {
     scheduler.push(num);
 }
-
+//the jni interface to run process image , Director::getInstance()->run()
 int
 Director::run() {
     initProgram();
@@ -39,19 +40,19 @@ Director::run() {
         }
     }
 }
-
+//init~ program use single pattern,maybe add display programm at soon by OpenGL ES (ex:_glProgram)
 int
 Director::initProgram() {
     _processImg = new ProcessImage();
 }
-
+//initialize the task scheduler
 int
 Director::initTask() {
     for( int i=0; i<40; ++i ) {
         addTask(i);
     }
 }
-
+//initialize thread, add set thread num  method at soon
 int
 Director::initThread(int num) {
     for( int i=0; i<num; ++i)
@@ -71,7 +72,7 @@ Director::process() {
         }
     }
 }
-//
+//Then lock the task scheduler ,promise only task per thread
 bool
 Director::checkTask(int * taskNum) {
     std::unique_lock<std::mutex> lck(mtx);
@@ -86,7 +87,7 @@ Director::checkTask(int * taskNum) {
     }
     return false;
 }
-
+//stop and release all thread resource
 int
 Director::stopAll() {
     if (SHUTDOWN) return -1;
@@ -96,7 +97,7 @@ Director::stopAll() {
 
     for(auto& th:threads) th.join();
 }
-
+//the flag TEST_PC set in Makefile,use run this program at PC (ex:Ubuntu)
 #ifdef TEST_PC
 int
 main() {

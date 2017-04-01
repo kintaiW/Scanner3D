@@ -7,6 +7,7 @@
 
 #include <vector>
 #include <string>
+#include <atomic>
 
 #include "opencv2/imgproc/imgproc.hpp"
 #include "opencv2/highgui/highgui.hpp"
@@ -21,11 +22,16 @@ public:
 //    ~ProcessImage();
     int run(int num);
     int captureLaser(Mat image, std::vector<Point2i>& centerPoints);
-    int generatePointCloud(int angle, std::vector<Point2i> point2D, std::vector<Mat>& model);
+    std::vector<Point2f> captureLaser(Mat image);//std::move();
+    int generatePointCloud(int angle, std::vector<Point2f> point2D);
+    int generatePointCloud(int angle, std::vector<Point2f> point2D, std::vector<Mat>& model);
     std::string getPath(int num);
 //    int setPath();
 private:
     std::string filePath;
+//    std::vector<Point2f> point2D;
+    std::vector< Mat > colors;//many thread write here,so maybe try atomic
+    std::vector< Mat > model;
 };
 
 static double cameraParam[6] = {
