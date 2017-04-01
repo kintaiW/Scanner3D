@@ -1,31 +1,33 @@
-##桌面式三维扫描
+#3D Scanning Android/Ubuntu platform desktop application
 ---
->用于三维建模学习,机器视觉.
-![meshlab查看](https://github.com/kintaiW/Scanner3D/raw/master/res/meshlab.png)
+![meshlab](https://github.com/kintaiW/Scanner3D/raw/master/res/meshlab.png)
+The general solution for 3D laser scanning.It provides a demo how to build a point cloud.
 
-###1. 环境
-####1.1 软件环境
-* __操作系统__: Ubuntu14.04.5
-* __C/C++__: 默认
+This project is in order to learn OpenCV and C++ usage.and add OpenGL soon.
+
+
+##1. environment
+###1.1 software
+* __Operating system__: Ubuntu14.04.5
+* __C/C++__: default,maybe need to support c++11
 * __OpenCV__: 3.0
-* __OpenGL__: 可选(需要做自制渲染)
-* __Meshlab__: 用于查看生成的模型,安装简单
+* __OpenGL__: coming soon
+* __Meshlab__: scan the model,after generate
 
-####1.2 硬件环境
-* __线激光__: 标准规格,成本150RMB左右
-* __转台__: 最好步进电机,一般的也可以,但需要做图片匹配
-* __可拍照手机__:  
-* __角尺__: 量出相机光心与线激光夹角,追求精度另说
+###1.2 hardware
+* __Line laser__: general,about $150RMB
+* __Rotating__:	default
+* __Phone__: default
 
-###2. 编译
-在src文件夹下
+##2. Build
+* __$__:cd src
 * __$__:make
-* __model.ply__: 运行后生成的ply格式模型
-![meshlab查看](https://github.com/kintaiW/Scanner3D/raw/master/res/out.png)
+* __model.ply__:meshlab 
+![meshlab](https://github.com/kintaiW/Scanner3D/raw/master/res/out.png)
 
-###3. 原理
-* __[原理图](http://blog.sina.com.cn/s/blog_662c78590100zqwd.html)__
-* __[开源项目](https://github.com/bqlabs/horus)__
+##3. Priciple
+* __[Schematic](http://blog.sina.com.cn/s/blog_662c78590100zqwd.html)__
+* __[Open source project](https://github.com/bqlabs/horus)__
 
-###4. 源码结构
+##4. Source code Architecture
 coming soon
