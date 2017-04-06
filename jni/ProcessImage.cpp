@@ -10,11 +10,15 @@
 ProcessImage::ProcessImage() {
     filePath = "/home/kintai/workspace/scanner/Image/160608/laser_off/";
 }
+ProcessImage::ProcessImage(std::string folderPath) {
+    filePath = folderPath;
+}
+ProcessImage::~ProcessImage() {}
 //process image enter
 int
 ProcessImage::run(int num) {
-    LOGK("ProcessImage run %s\n", getPath(num).c_str());
-
+//    LOGK("ProcessImage:run %s\n",  getPath(num).c_str());
+    LOGK("ProcessImage:run %d\n", num);
     Mat img = imread(getPath(num));
     if ( img.empty() ) return -1;
     std::vector<Point2f> point2D = captureLaser(img);

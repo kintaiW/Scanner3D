@@ -8,12 +8,13 @@ include /home/kintai/tools/OpenCV-android-sdk/sdk/native/jni/OpenCV.mk
 LOCAL_MODULE := future
 LOCAL_SRC_FILES := libfuturejni.cpp \
                     ProcessImage.cpp \
-                    Director.cpp
+                    Director.cpp    \
+                    GLProgram.cpp
 
 LOCAL_C_INCLUDES += $(LOCAL_PATH)
 
 LOCAL_CPPFLAGS += -std=c++11 -DANDROID=1
-LOCAL_LDLIBS += -llog
+LOCAL_LDLIBS += -llog -lGLESv2
 
 include $(BUILD_SHARED_LIBRARY)
 #-D__cplusplus=201103L

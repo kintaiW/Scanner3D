@@ -17,9 +17,7 @@ Director::Director():
 SHUTDOWN(false),
 _processImg(nullptr){}
 
-Director::~Director() {
-//    delete _processImg;//-------------?
-}
+Director::~Director() {}
 //add task to scheduler
 int
 Director::addTask(int num) {
@@ -30,25 +28,34 @@ int
 Director::run() {
     initProgram();
     initTask();
-    initThread(8);
+    initThread(THREAD_MAX);
     while (true) {
-        if ( !hasTask() ) {
+        if ( ENDFLAG == TASKNUM ) {
             if ( stopAll() == -1 ) {
                 LOGK("NOW EXIT %s\n",LOG_TAG);
                 break;
             }
         }
     }
+    exitProgram();
 }
 //init~ program use single pattern,maybe add display programm at soon by OpenGL ES (ex:_glProgram)
 int
 Director::initProgram() {
+#if TEST_PC
     _processImg = new ProcessImage();
+#else
+    _processImg = new ProcessImage(getImagePath());
+#endif
+}
+int
+Director::exitProgram() {
+    delete _processImg;
 }
 //initialize the task scheduler
 int
 Director::initTask() {
-    for( int i=0; i<40; ++i ) {
+    for( int i= TASKSTART; i<TASKNUM; ++i ) {
         addTask(i);
     }
 }
@@ -56,7 +63,7 @@ Director::initTask() {
 int
 Director::initThread(int num) {
     for( int i=0; i<num; ++i)
-        threads.push_back( std::thread(std::bind(&Director::process,this)) );
+        threads.emplace_back( std::thread(std::bind(&Director::process,this)) );
 }
 
 //thread pool use process image and generate point cloud
@@ -67,6 +74,7 @@ Director::process() {
         int * taskNum;
         if ( checkTask(taskNum) ) {
             _processImg->run(*taskNum);
+            ENDFLAG+=1;
             //std::this_thread::sleep_for(std::chrono::seconds(1));
             LOGK("pid %lu run %d\n",std::this_thread::get_id(),*taskNum);
         }
@@ -77,10 +85,9 @@ bool
 Director::checkTask(int * taskNum) {
     std::unique_lock<std::mutex> lck(mtx);
     //wait a new task,but in this program is not need,because of the task queue is add at first
-    while ( !hasTask() && !SHUTDOWN ) {
+    if ( !hasTask() ) {
             conv.wait(lck);
-    }
-    if ( hasTask() ) {
+    } else {
         *taskNum = scheduler.front();
         scheduler.pop();
         return true;
@@ -92,10 +99,23 @@ int
 Director::stopAll() {
     if (SHUTDOWN) return -1;
     SHUTDOWN = true;
-    LOGK("end all threads %s\n",LOG_TAG);
+
     conv.notify_all();
 
     for(auto& th:threads) th.join();
+    LOGK("end all threads %s\n",LOG_TAG);
+}
+//create a new thread to run,
+int
+Director::startProcess()
+{
+    std::thread( std::bind(&Director::run,this) ).detach();
+}
+//
+void
+Director::setImagePath(char * s)
+{
+    folderPath = std::string(s);
 }
 //the flag TEST_PC set in Makefile,use run this program at PC (ex:Ubuntu)
 #ifdef TEST_PC
@@ -105,3 +125,4 @@ main() {
     LOGK("end main threads %s\n",LOG_TAG);
 }
 #endif
+

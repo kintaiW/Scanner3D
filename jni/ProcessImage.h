@@ -8,6 +8,7 @@
 #include <vector>
 #include <string>
 #include <atomic>
+#include <string>
 
 #include "opencv2/imgproc/imgproc.hpp"
 #include "opencv2/highgui/highgui.hpp"
@@ -19,13 +20,15 @@ class ProcessImage
 {
 public:
     ProcessImage();
-//    ~ProcessImage();
+    ProcessImage(std::string folderPath);
+    ~ProcessImage();
     int run(int num);
     int captureLaser(Mat image, std::vector<Point2i>& centerPoints);
     std::vector<Point2f> captureLaser(Mat image);//std::move();
     int generatePointCloud(int angle, std::vector<Point2f> point2D);
     int generatePointCloud(int angle, std::vector<Point2f> point2D, std::vector<Mat>& model);
     std::string getPath(int num);
+    int getModelSize() { return model.size();}
 //    int setPath();
 private:
     std::string filePath;

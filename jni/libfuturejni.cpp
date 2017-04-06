@@ -34,4 +34,17 @@ Java_net_sourceforge_opencamera_MainActivity_futureTest
     Director::getInstance()->addTask(num);
 }
 
+void
+Java_net_sourceforge_opencamera_MainActivity_futureTest
+(JNIEnv * env, jobject thiz, jstring path)
+{
+    const char * str;
+    str = env->GetStringUTFChars(path,NULL);
+    LOGK("java to native path:%s\n",str);
+    char * pc = new char[strlen(str)+1];
+    strcpy(pc,str);
+    Director::getInstance()->setImagePath(pc);
+    Director::getInstance()->startProcess();
+}
+
 //}
